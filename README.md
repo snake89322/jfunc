@@ -38,4 +38,34 @@ webpack
 *_$.CanvasAdaptIE9()* - Function
 >canvas在IE9下进行适配
 
+*_$.Method* - Object
+>jfunc基础方法
+```javascript
+_$.Method.allOf(/* funs */); // All functions' return judge
+
+_$.Method.anyOf(/* funs */); // All functions' return judge
+
+_$.Method.complement(pred); // Complementary set 
+
+_$.Method.cat(); // Concat 
+
+_$.Method.construct(head, tail); // Element concat with array
+
+_$.Method.mapcat(fun, coll); // Dealing elements and concat
+
+_$.Method.butLast(coll); // Except last element of array
+
+_$.Method.interpose(inter, coll); // Insert element to every interspace of array
+
+_$.Method.dereplicate(coll); // Remove repeat elements of array
+
+_$.Method.project(table, keys); // Select keys of a table and return a new table
+
+_$.Method.rename(obj, newNames); // Rename key of object
+
+_$.Method.as(table, newNames); // Rename keys of table
+
+_$.Method.restrict(table, pred); // Conditions select and return a new table
+```
+
 
