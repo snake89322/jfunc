@@ -26,7 +26,7 @@ webpack
 ```
 
 ### 2 通用说明
-1、jFunc引入了underscore，" <script /> " 中使用 " _ " 调用。
+1、jFunc引入了underscore，" script " 中使用 " _ " 调用。
 
 2、jFunc全局变量root.jFunc 或者 root._$
 
