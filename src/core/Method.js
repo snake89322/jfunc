@@ -14,10 +14,20 @@ var Method = function (obj) {
 };
 
 // Internal function that returns existy
-function existy (x) { return x != null };
+function existy (x) { return x != null; };
 // Internal function that returns truthy
-function truthy (x) { return (x !== false) && existy(x) };
-
+function truthy (x) { return (x !== false) && existy(x); };
+// Internal function that infomation tip
+function fail (thing) { throw new Error(thing); };
+function warn (thing) { console.log(["WARNING:", thing].join(' ')); };
+function note (thing) { console.log(["NOTE:", thing].join(' ')); };
+// Internal function that do action() judged by cond
+function doWhen (cond, action) {
+	if (truthy(cond))
+		return action();
+ 	else
+	 	return undefined;
+};
 // All functions' return judge
 Method.allOf = function (/* funs */) {
 	return _.reduceRight(arguments, function (truth, f){
@@ -120,19 +130,26 @@ Method.restrict = function (table, pred) {
 };
 
 // Pluck object's key or coll's number
-Method.plucker (field) {
+Method.plucker = function (field) {
 	return function (obj) {
 		return (obj && obj[field]);
 	};
 };
 
 // Compare elements of coll and return bestFun element
-Method.finder (valueFun, bestFun, coll) {
+Method.finder = function (valueFun, bestFun, coll) {
 	return _.reduce(coll, function (best, current) {
 		var bestValue = valueFun(best);
 		var currentValue = valueFun(current);
 
 		return (bestValue === bestFun(bestValue, currentValue)) ? best : current;
+	});
+};
+
+// Brief of Method.finder
+Method.best = function (fun, coll) {
+	return _.reduce(coll, function (x, y) {
+		return fun(x, y) ? x : y;
 	});
 };
 

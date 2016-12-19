@@ -127,3 +127,9 @@ _$.Method.finder(
 //=> {name: "Lucy", age: 36}
 ```
 
+```javascript
+_$.Method.best(fun, coll); // Brief of Method.finder
+
+best(function (x, y) { return x > y }, [1, 2, 3, 4, 5]);
+//=> 5
+```

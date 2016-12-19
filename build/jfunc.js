@@ -91,7 +91,7 @@
 	'use strict';
 
 	/*
-	 * @author chenzehui /  https://github.com/snake89322
+	 * @author zehui-chen /  https://github.com/snake89322
 	 * 
 	 * */
 
@@ -206,6 +206,30 @@
 		return _.reduce(table, function (newTable, obj) {
 			if (truthy(pred(obj))) return newTable;else return _.without(newTable, obj);
 		}, table);
+	};
+
+	// Pluck object's key or coll's number
+	Method.plucker = function (field) {
+		return function (obj) {
+			return obj && obj[field];
+		};
+	};
+
+	// Compare elements of coll and return bestFun element
+	Method.finder = function (valueFun, bestFun, coll) {
+		return _.reduce(coll, function (best, current) {
+			var bestValue = valueFun(best);
+			var currentValue = valueFun(current);
+
+			return bestValue === bestFun(bestValue, currentValue) ? best : current;
+		});
+	};
+
+	// Brief of Method.finder
+	Method.best = function (fun, coll) {
+		return _.reduce(coll, function (x, y) {
+			return fun(x, y) ? x : y;
+		});
 	};
 
 	exports.Method = Method;
