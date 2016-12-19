@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+
+	</head>
+	<body>
+		
+		<!--<script src="//cdn.bootcss.com/jquery/3.1.1/jquery.min.js" type="text/javascript" charset="utf-8"></script>-->
+		
+		<script src="../build/jfunc.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+      // 函数作用范围的this暂存器模拟闭包   
+			function createWeirdScaleFunction (FACTOR) {
+        // 手动跟踪 FACTOR
+        return function (v) {
+          this['FACTOR'] = FACTOR;
+          var captures = this;
+          return _.map(v, _.bind(function (n) {
+            return (n * this['FACTOR']);
+          }, captures));
+        };
+      };
+
+      var scale10 = createWeirdScaleFunction(10);
+      var result = scale10.call({}, [5, 6, 7]);
+
+      console.log(result);
+
+		</script>
+	</body>
+</html>

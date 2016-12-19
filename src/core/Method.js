@@ -119,4 +119,21 @@ Method.restrict = function (table, pred) {
 	}, table);
 };
 
+// Pluck object's key or coll's number
+Method.plucker (field) {
+	return function (obj) {
+		return (obj && obj[field]);
+	};
+};
+
+// Compare elements of coll and return bestFun element
+Method.finder (valueFun, bestFun, coll) {
+	return _.reduce(coll, function (best, current) {
+		var bestValue = valueFun(best);
+		var currentValue = valueFun(current);
+
+		return (bestValue === bestFun(bestValue, currentValue)) ? best : current;
+	});
+};
+
 export { Method };

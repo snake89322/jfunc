@@ -40,32 +40,90 @@ webpack
 
 *_$.Method* - Object
 >jfunc基础方法
+
 ```javascript
 _$.Method.allOf(/* funs */); // All functions' return judge
+```
 
+```javascript
 _$.Method.anyOf(/* funs */); // All functions' return judge
+```
 
+```javascript
 _$.Method.complement(pred); // Complementary set 
+```
 
+```javascript
 _$.Method.cat(); // Concat 
+```
 
+```javascript
 _$.Method.construct(head, tail); // Element concat with array
+```
 
+```javascript
 _$.Method.mapcat(fun, coll); // Dealing elements and concat
+```
 
+```javascript
 _$.Method.butLast(coll); // Except last element of array
+```
 
+```javascript
 _$.Method.interpose(inter, coll); // Insert element to every interspace of array
+```
 
+```javascript
 _$.Method.dereplicate(coll); // Remove repeat elements of array
+```
 
+```javascript
 _$.Method.project(table, keys); // Select keys of a table and return a new table
+```
 
+```javascript
 _$.Method.rename(obj, newNames); // Rename key of object
+```
 
+```javascript
 _$.Method.as(table, newNames); // Rename keys of table
+```
 
+```javascript
 _$.Method.restrict(table, pred); // Conditions select and return a new table
 ```
 
+```javascript
+_$.Method.plucker(field); // Pluck object's key or coll's number
+
+var best = {title: "Infinite Jest", author: "DFW"};
+var getTitle = _$.Method.plucker('title');
+getTitle(best) //=> "Infinite Jest"
+
+var books = [{title: "Chthon"}, {stars: 5}, {title: "Botchan"}];
+var third = _$.Method.plucker(2);
+third(books) //=> {title: "Botchan"}
+_.filter(books, getTitle); //=> [{title: "Chthon"}, {title: "Botchan"}]
+```
+
+```javascript
+_$.Method.finder(valueFun, bestFun, coll); // Compare elements of coll and return bestFun element
+
+_$.Method.finder(_.identity, Math.max, [1, 2, 3, 4, 5]); //=> 5
+
+var people = [
+  {name: "Fred", age: 65},
+  {name: "Lucy", age: 36},
+];
+
+_$.Method.finder(_$.Method.plucker('age'), Math.max, people);
+//=> {name: "Fred", age: 65}
+
+_$.Method.finder(
+  _$.Method.plucker('name'), 
+  function (x, y) { return (x.charAt(0) === "L") ? x : y}, 
+  people
+);
+//=> {name: "Lucy", age: 36}
+```
 
