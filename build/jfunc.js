@@ -64,7 +64,7 @@
 
 	'use strict';
 
-	var _coreMethodJs = __webpack_require__(2);
+	var _coreFunJs = __webpack_require__(2);
 
 	var _useragentUserAgentJs = __webpack_require__(4);
 
@@ -74,7 +74,7 @@
 
 	__webpack_require__(7);
 
-	exports.Method = _coreMethodJs.Method;
+	exports.Fun = _coreFunJs.Fun;
 	exports.UserAgent = _useragentUserAgentJs.UserAgent;
 	exports.CanvasAdaptIE9 = _canvasCanvasAdaptIE9Js.CanvasAdaptIE9;
 
@@ -98,10 +98,10 @@
 	// Create a safe reference to the Underscore object for use below.
 	var _ = __webpack_require__(3);
 
-	// Create a safe reference to the Method object for use below.
-	var Method = function Method(obj) {
-		if (obj instanceof Method) return obj;
-		if (!(this instanceof Method)) return new Method(obj);
+	// Create a safe reference to the Fun object for use below.
+	var Fun = function Fun(obj) {
+		if (obj instanceof Fun) return obj;
+		if (!(this instanceof Fun)) return new Fun(obj);
 		this._wrapped = obj;
 	};
 
@@ -113,58 +113,72 @@
 	function truthy(x) {
 		return x !== false && existy(x);
 	};
+	// Internal function that infomation tip
+	function fail(thing) {
+		throw new Error(thing);
+	};
+	function warn(thing) {
+		console.log(["WARNING:", thing].join(' '));
+	};
+	function note(thing) {
+		console.log(["NOTE:", thing].join(' '));
+	};
+	// Internal function that do action() judged by cond
+	function doWhen(cond, action) {
+		if (truthy(cond)) return action();else return undefined;
+	};
 
-	// All functions' return judge
-	Method.allOf = function () /* funs */{
+	// All functions' return judge like &&
+	Fun.allOf = function () /* funs */{
 		return _.reduceRight(arguments, function (truth, f) {
 			return truth && f();
 		}, true);
 	};
 
-	// All functions' return judge
-	Method.anyOf = function () /* funs */{
+	// All functions' return judge like ||
+	Fun.anyOf = function () /* funs */{
 		return _.reduceRight(arguments, function (truth, f) {
 			return truth || f();
 		}, false);
 	};
 
 	// Complementary set 
-	Method.complement = function (pred) {
+	Fun.complement = function (pred) {
 		return function () {
 			return !pred.apply(null, _.toArray(arguments));
 		};
 	};
 
 	// Concat 
-	Method.cat = function () {
+	Fun.cat = function () {
 		var head = _.first(arguments);
 		if (existy(head)) return head.concat.apply(head, _.rest(arguments));else return [];
 	};
 
 	// Element concat with array
-	Method.construct = function (head, tail) {
-		return Method.cat([head], _.toArray(tail));
+	Fun.construct = function (head, tail) {
+		return Fun.cat([head], _.toArray(tail));
 	};
 
 	// Dealing elements and concat
-	Method.mapcat = function (fun, coll) {
-		return Method.cat.apply(null, _.map(coll, fun));
+	Fun.mapcat = function (fun, coll) {
+		return Fun.cat.apply(null, _.map(coll, fun));
 	};
 
 	// Except last element of array
-	Method.butLast = function (coll) {
+	Fun.butLast = function (coll) {
 		return _.toArray(coll).slice(0, -1);
 	};
 
 	// Insert element to every interspace of array
-	Method.interpose = function (inter, coll) {
-		return Method.butLast(Method.mapcat(function (e) {
-			return Method.construct(e, [inter]);
+	Fun.interpose = function (inter, coll) {
+		return Fun.butLast(Fun.mapcat(function (e) {
+			return Fun.construct(e, [inter]);
 		}, coll));
 	};
 
 	// Remove repeat elements of array
-	Method.dereplicate = function (coll) {
+	Fun.dereplicate = function (coll) {
 		coll.sort();
 		var re = [coll[0]];
 		for (var i = 1, l = coll.length; i < l; i++) {
@@ -176,14 +190,14 @@
 	};
 
 	// Select keys of a table and return a new table
-	Method.project = function (table, keys) {
+	Fun.project = function (table, keys) {
 		return _.map(table, function (obj) {
-			return _.pick.apply(null, Method.construct(obj, _.isArray(keys) ? keys : [keys]));
+			return _.pick.apply(null, Fun.construct(obj, _.isArray(keys) ? keys : [keys]));
 		});
 	};
 
 	// Rename key of object
-	Method.rename = function (obj, newNames) {
+	Fun.rename = function (obj, newNames) {
 		return _.reduce(newNames, function (o, nu, old) {
 			if (_.has(obj, old)) {
 				o[nu] = obj[old];
@@ -191,32 +205,32 @@
 			} else {
 				return o;
 			}
-		}, _.omit.apply(null, Method.construct(obj, _.keys(newNames))));
+		}, _.omit.apply(null, Fun.construct(obj, _.keys(newNames))));
 	};
 
 	// Rename keys of table
-	Method.as = function (table, newNames) {
+	Fun.as = function (table, newNames) {
 		return _.map(table, function (obj) {
-			return Method.rename(obj, newNames);
+			return Fun.rename(obj, newNames);
 		});
 	};
 
 	// Conditions select and return a new table
-	Method.restrict = function (table, pred) {
+	Fun.restrict = function (table, pred) {
 		return _.reduce(table, function (newTable, obj) {
 			if (truthy(pred(obj))) return newTable;else return _.without(newTable, obj);
 		}, table);
 	};
 
 	// Pluck object's key or coll's number
-	Method.plucker = function (field) {
+	Fun.plucker = function (field) {
 		return function (obj) {
 			return obj && obj[field];
 		};
 	};
 
 	// Compare elements of coll and return bestFun element
-	Method.finder = function (valueFun, bestFun, coll) {
+	Fun.finder = function (valueFun, bestFun, coll) {
 		return _.reduce(coll, function (best, current) {
 			var bestValue = valueFun(best);
 			var currentValue = valueFun(current);
@@ -225,14 +239,109 @@
 		});
 	};
 
-	// Brief of Method.finder
-	Method.best = function (fun, coll) {
+	// Brief of Fun.finder
+	Fun.best = function (fun, coll) {
 		return _.reduce(coll, function (x, y) {
 			return fun(x, y) ? x : y;
 		});
 	};
 
-	exports.Method = Method;
+	// Repeat a fun with times
+	Fun.repeatly = function (times, fun) {
+		return _.map(_.range(times), fun);
+	};
+
+	// Evolution for Fun.repeatly
+	Fun.iterateUntil = function (fun, check, init) {
+		var ret = [];
+		var result = fun(init);
+
+		while (check(result)) {
+			ret.push(result);
+			result = fun(result);
+		};
+
+		return ret;
+	};
+
+	// Combinator function
+	Fun.always = function (value) {
+		return function () {
+			return value;
+		};
+	};
+
+	// Receive a method，that apply to defined targets
+	Fun.invoker = function (name, method) {
+		return function (target /* args */) {
+			if (!existy(target)) fail("Must provide a target");
+
+			var targetMethod = target[name];
+			var args = _.rest(arguments);
+
+			return doWhen(existy(targetMethod) && method === targetMethod, function () {
+				return targetMethod.apply(target, args);
+			});
+		};
+	};
+
+	// Any null or undefined args use default to replace
+	Fun.fnull = function (fun /*, defaults*/) {
+		var defaults = _.rest(arguments);
+
+		return function () /* args */{
+			var args = _.map(arguments, function (e, i) {
+				return existy(e) ? e : defaults[i];
+			});
+
+			return fun.apply(null, args);
+		};
+	};
+
+	// Object default config
+	Fun.defaults = function (conf) {
+		return function (o, k) {
+			var val = Fun.fnull(_.identity, conf[k]);
+			return o && val(o[k]);
+		};
+	};
+
+	// Fun that receive validators and return true or false
+	Fun.checker = function () /* validators */{
+		var validators = _.toArray(arguments);
+
+		return function (obj) {
+			return _.reduce(validators, function (errs, check) {
+				if (check(obj)) return errs;else return _.chain(errs).push(check.message).value();
+			}, []);
+		};
+	};
+
+	// Special API that create validators to grace Fun.checker
+	Fun.validator = function (message, fun) {
+		var f = function f() /* args */{
+			return fun.apply(fun, arguments);
+		};
+
+		f['message'] = message;
+		return f;
+	};
+
+	// Validate object has keys
+	Fun.hasKeys = function () /* keys */{
+		var KEYS = _.toArray(arguments);
+
+		var fun = function fun(obj) {
+			return _.every(KEYS, function (k) {
+				return _.has(obj, k);
+			});
+		};
+
+		fun.message = Fun.cat(["Must have values for keys:"], KEYS).join(" ");
+		return fun;
+	};
+
+	exports.Fun = Fun;
 
 /***/ },
 /* 3 */

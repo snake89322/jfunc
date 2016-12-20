@@ -11,8 +11,19 @@
 		
 		<script src="../build/jfunc.js" type="text/javascript" charset="utf-8"></script>
 		<script type="text/javascript">
-			console.log(_$.UserAgent)
+			console.log(_$.UserAgent);
 
+			function always (v) {
+				return function () {
+					return v;
+				}
+			}
+
+			var f = always(function () {});
+
+			console.log(f() === f())
+			var g = always(function () {});
+			console.log(f() === g())
 		</script>
 	</body>
 </html>

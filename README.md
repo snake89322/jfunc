@@ -38,89 +38,89 @@ webpack
 *_$.CanvasAdaptIE9()* - Function
 >canvas在IE9下进行适配
 
-*_$.Method* - Object
+*_$.Fun* - Object
 >jfunc基础方法
 
 ```javascript
-_$.Method.allOf(/* funs */); // All functions' return judge
+_$.Fun.allOf(/* funs */); // All functions' return judge
 ```
 
 ```javascript
-_$.Method.anyOf(/* funs */); // All functions' return judge
+_$.Fun.anyOf(/* funs */); // All functions' return judge
 ```
 
 ```javascript
-_$.Method.complement(pred); // Complementary set 
+_$.Fun.complement(pred); // Complementary set 
 ```
 
 ```javascript
-_$.Method.cat(); // Concat 
+_$.Fun.cat(); // Concat 
 ```
 
 ```javascript
-_$.Method.construct(head, tail); // Element concat with array
+_$.Fun.construct(head, tail); // Element concat with array
 ```
 
 ```javascript
-_$.Method.mapcat(fun, coll); // Dealing elements and concat
+_$.Fun.mapcat(fun, coll); // Dealing elements and concat
 ```
 
 ```javascript
-_$.Method.butLast(coll); // Except last element of array
+_$.Fun.butLast(coll); // Except last element of array
 ```
 
 ```javascript
-_$.Method.interpose(inter, coll); // Insert element to every interspace of array
+_$.Fun.interpose(inter, coll); // Insert element to every interspace of array
 ```
 
 ```javascript
-_$.Method.dereplicate(coll); // Remove repeat elements of array
+_$.Fun.dereplicate(coll); // Remove repeat elements of array
 ```
 
 ```javascript
-_$.Method.project(table, keys); // Select keys of a table and return a new table
+_$.Fun.project(table, keys); // Select keys of a table and return a new table
 ```
 
 ```javascript
-_$.Method.rename(obj, newNames); // Rename key of object
+_$.Fun.rename(obj, newNames); // Rename key of object
 ```
 
 ```javascript
-_$.Method.as(table, newNames); // Rename keys of table
+_$.Fun.as(table, newNames); // Rename keys of table
 ```
 
 ```javascript
-_$.Method.restrict(table, pred); // Conditions select and return a new table
+_$.Fun.restrict(table, pred); // Conditions select and return a new table
 ```
 
 ```javascript
-_$.Method.plucker(field); // Pluck object's key or coll's number
+_$.Fun.plucker(field); // Pluck object's key or coll's number
 
 var best = {title: "Infinite Jest", author: "DFW"};
-var getTitle = _$.Method.plucker('title');
-getTitle(best) //=> "Infinite Jest"
+var getTitle = _$.Fun.plucker('title');
+getTitle(best); //=> "Infinite Jest"
 
 var books = [{title: "Chthon"}, {stars: 5}, {title: "Botchan"}];
-var third = _$.Method.plucker(2);
-third(books) //=> {title: "Botchan"}
+var third = _$.Fun.plucker(2);
+third(books); //=> {title: "Botchan"}
 _.filter(books, getTitle); //=> [{title: "Chthon"}, {title: "Botchan"}]
 ```
 
 ```javascript
-_$.Method.finder(valueFun, bestFun, coll); // Compare elements of coll and return bestFun element
+_$.Fun.finder(valueFun, bestFun, coll); // Compare elements of coll and return bestFun element
 
-_$.Method.finder(_.identity, Math.max, [1, 2, 3, 4, 5]); //=> 5
+_$.Fun.finder(_.identity, Math.max, [1, 2, 3, 4, 5]); //=> 5
 
 var people = [
   {name: "Fred", age: 65},
   {name: "Lucy", age: 36},
 ];
 
-_$.Method.finder(_$.Method.plucker('age'), Math.max, people);
+_$.Fun.finder(_$.Fun.plucker('age'), Math.max, people);
 //=> {name: "Fred", age: 65}
 
-_$.Method.finder(
-  _$.Method.plucker('name'), 
+_$.Fun.finder(
+  _$.Fun.plucker('name'), 
   function (x, y) { return (x.charAt(0) === "L") ? x : y}, 
   people
 );
@@ -128,8 +128,94 @@ _$.Method.finder(
 ```
 
 ```javascript
-_$.Method.best(fun, coll); // Brief of Method.finder
+_$.Fun.best(fun, coll); // Brief of Fun.finder
 
-best(function (x, y) { return x > y }, [1, 2, 3, 4, 5]);
+_$.Fun.best(function (x, y) { return x > y }, [1, 2, 3, 4, 5]);
 //=> 5
+```
+
+```javascript
+_$.Fun.repeatly(times, fun); // Repeat a fun with times
+
+_$.Fun.repeatly(3, function () { return "Odelay!"; });
+//=> ["Odelay!", "Odelay!", "Odelay!"]
+```
+
+```javascript
+_$.Fun.iterateUntil(fun, check, init); // Evolution for Fun.repeatly
+
+_$.Fun.iterateUntil(
+  function (n) { return n+n; },
+  function (n) { return n <= 1024 },
+  1
+);
+//=> [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+```
+
+```javascript
+_$.Fun.always(value); // Combinator function
+```
+
+```javascript
+_$.Fun.invoker(name, method); // Receive a method，that apply to defined targets
+
+var rev = _$.Fun.invoker('reverse', Array.prototype.reverse);
+_.map([[1, 2, 3]], rev); //=> [[3, 2, 1]]
+```
+
+```javascript
+_$.Fun.fnull(fun /*, defaults*/); // Any null or undefined args use default to replace
+
+var nums = [1, 2, 3, null, 5];
+var safeMult = _$.Fun.fnull(function (total, n) { return total * n; }, 1, 1);
+_.reduce(nums, safeMult); //=> 30
+```
+
+```javascript
+_$.Fun.defaults(conf); // Object default config
+
+function doSomething (config) {
+  var lookup = _$.Fun.defaults({critical: 108});
+  
+  return lookup(config, 'critical');
+};
+doSomething({critical: 9}); //=> 9
+doSomething({}); //=> 108
+```
+
+```javascript
+_$.Fun.checker(/* validators */); // Fun that receive validators and return true or false
+
+var alwaysPasses = _$.Fun.checker(_$.Fun.always(true), _$.Fun.always(true));
+alwaysPasses({}); //=> []
+
+var fails = _$.Fun.always(false);
+fails.message = "a failuere in life";
+var alwaysFails = _$.Fun.checker(fails);
+alwaysFails({}); //=> ["a failuere in life"]
+```
+
+```javascript
+_$.Fun.validator = function (message, fun); // Special API that create validators to grace Fun.checker
+
+var gonnaFail = _$.Fun.checker(_$.Fun.validator("ZOMG!", _$.Fun.always(false)));
+gonnaFail(100); //=> ["ZOMG!"]
+
+function aMap (obj) { return _.isObject(obj); };
+var checkCommand = _$.Fun.checker(_$.Fun.validator("must be a map", aMap));
+checkCommand({}); //=> []
+checkCommand(42); //=> ["must be a map"]
+```
+
+```javascript
+_$.Fun.hasKeys = function (/* keys */); // Validate object has keys
+
+function aMap (obj) { return _.isObject(obj); };
+var checkCommand = _$.Fun.checker(
+  _$.Fun.validator("must be a map", aMap),
+  _$.Fun.hasKeys("msg", "type")
+);
+checkCommand({msg: "blah", type: "display"}); //=> []
+checkCommand(32); //=> ["must be a map", "Must have values for keys: msg type"]
+checkCommand({}); //=> ["Must have values for keys: msg type"]
 ```

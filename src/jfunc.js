@@ -1,6 +1,6 @@
 import './polyfills.js';
 
-export { Method } from './core/Method.js';
+export { Fun } from './core/Fun.js';
 
 export { UserAgent } from './useragent/UserAgent.js';
 export { CanvasAdaptIE9 } from './canvas/CanvasAdaptIE9.js';
