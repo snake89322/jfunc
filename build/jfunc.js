@@ -149,6 +149,14 @@
 		};
 	};
 
+	// Is even
+	Fun.isEven = function (n) {
+		return n % 2 === 0;
+	};
+
+	// Is odd
+	Fun.isOdd = Fun.complement(Fun.isEven);
+
 	// Concat 
 	Fun.cat = function () {
 		var head = _.first(arguments);
@@ -339,6 +347,102 @@
 
 		fun.message = Fun.cat(["Must have values for keys:"], KEYS).join(" ");
 		return fun;
+	};
+
+	// Reverse string
+	Fun.stringReverse = function (s) {
+		if (!_.isString(s)) return undefined;
+		return s.split('').reverse().join("");
+	};
+
+	// Try to call evey fun to target until return undefined 
+	Fun.dispatch = function () /* funs */{
+		var funs = _.toArray(arguments);
+		var size = funs.length;
+
+		return function (target /*, args*/) {
+			var ret = undefined;
+			var args = _.rest(arguments);
+
+			for (var funIndex = 0; funIndex < size; funIndex++) {
+				var fun = funs[funIndex];
+				ret = fun.apply(fun, Fun.construct(target, args));
+
+				if (existy(ret)) return ret;
+			}
+
+			return ret;
+		};
+	};
+
+	// Auto curry args
+	Fun.curry1 = function (fun) {
+		return function (arg) {
+			return fun(arg);
+		};
+	};
+	Fun.curry2 = function (fun) {
+		return function (secondArg) {
+			return function (firstArg) {
+				return fun(firstArg, secondArg);
+			};
+		};
+	};
+	Fun.curry3 = function (fun) {
+		return function (last) {
+			return function (middle) {
+				return function (first) {
+					return fun(first, middle, last);
+				};
+			};
+		};
+	};
+
+	// Int to hex
+	Fun.toHex = function (n) {
+		var hex = n.toString(16);
+		return hex.length < 2 ? [0, hex].join('') : hex;
+	};
+
+	// RGB to hex string
+	Fun.rgbToHexString = function (r, g, b) {
+		return ['#', Fun.toHex(r), Fun.toHex(g), Fun.toHex(b)].join('');
+	};
+
+	// Partial application for certain args
+	Fun.partial1 = function (fun, arg1) {
+		return function () /* args */{
+			var args = Fun.construct(arg1, arguments);
+			return fun.apply(fun, args);
+		};
+	};
+	Fun.partial2 = function (fun, arg1, arg2) {
+		return function () /* args */{
+			var args = Fun.cat([arg1, arg2], arguments);
+			return fun.apply(fun, args);
+		};
+	};
+	Fun.partial = function (fun /*, pargs*/) {
+		var pargs = _.rest(arguments);
+		return function () /* args */{
+			var args = Fun.cat(pargs, _.toArray(arguments));
+			return fun.apply(fun, args);
+		};
+	};
+
+	// Precondition with Fun.validator
+	Fun.condition1 = function () /* validators */{
+		var validators = _.toArray(arguments);
+
+		return function (fun, arg) {
+			var errors = Fun.mapcat(function (isValid) {
+				return isValid(arg) ? [] : [isValid.message];
+			}, validators);
+
+			if (!_.isEmpty(errors)) throw new Error(errors.join(","));
+
+			return fun(arg);
+		};
 	};
 
 	exports.Fun = Fun;
@@ -2045,7 +2149,7 @@
 
 	'use strict';
 
-	var REVISION = exports.REVISION = '0.0.1';
+	var REVISION = exports.REVISION = '1.0.2';
 
 /***/ },
 /* 7 */

@@ -54,6 +54,14 @@ _$.Fun.complement(pred); // Complementary set
 ```
 
 ```javascript
+_$.Fun.isEven(n); // Is even
+```
+
+```javascript
+_$.Fun.isOdd(n); // Is odd
+```
+
+```javascript
 _$.Fun.cat(); // Concat 
 ```
 
@@ -181,7 +189,7 @@ function doSomething (config) {
 };
 doSomething({critical: 9}); //=> 9
 doSomething({}); //=> 108
-```
+```  
 
 ```javascript
 _$.Fun.checker(/* validators */); // Fun that receive validators and return true or false
@@ -218,4 +226,189 @@ var checkCommand = _$.Fun.checker(
 checkCommand({msg: "blah", type: "display"}); //=> []
 checkCommand(32); //=> ["must be a map", "Must have values for keys: msg type"]
 checkCommand({}); //=> ["Must have values for keys: msg type"]
+```
+
+```javascript
+_$.Fun.stringReverse = function (s); // Reverse string
+
+_$.Fun.stringReverse("abc"); //=> "cba"
+_$.Fun.stringReverse(1); //=> undefined
+```
+
+```javascript
+_$.Fun.dispatch = function (/* funs */); // Try to call evey fun to target until return undefined 
+
+var str = _$.Fun.dispatch(
+  _$.Fun.invoker('toString', Array.prototype.toString),
+  _$.Fun.invoker('toString', String.prototype.toString)
+);
+str("a"); //=> "a"
+str(_.range(10)); //=> "0,1,2,3,4,5,6,7,8,9"
+
+var rev = _$.Fun.dispatch(
+  _$.Fun.invoker('reverse', Array.prototype.reverse),
+  _$.Fun.stringReverse
+);
+rev([1, 2, 3]); //=> [3, 2, 1]
+rev("abc"); //=> "cba"
+
+var sillyReverse = _$.Fun.dispatch(rev, _$.Fun.always(42));
+sillyReverse([1, 2, 3]); //=> [3, 2, 1]
+sillyReverse("abc"); //=> "cba"
+sillyReverse(10000); //=> 42
+
+var notify = changeView = shutdown = _.identity;
+function isa (type, action) {
+  return function (obj) {
+    if(type === obj.type)
+      return action(obj);
+  };
+};
+var performCommand = _$.Fun.dispatch(
+  isa('notify', function (obj) { return notify(obj.message); }),
+  isa('join', function (obj) { return changeView(obj.target); }),
+  function (obj) { return _.identity(obj.type) }
+);
+var performAdminCommand = _$.Fun.dispatch(
+  isa('kill', function (obj) { return shutdown(obj.hostname); }),
+  performCommand
+);
+performAdminCommand({type: 'kill', hostname: 'localhost'}); 
+//=> "localhost"
+performAdminCommand({type: 'fail'}); 
+//=> "fail"
+performAdminCommand({type: 'join', target: 'foo'}); 
+//=> "foo"
+
+var performTrialUserCommand = _$.Fun.dispatch(
+  isa('join', function (obj) { alert('禁止显示！重载限制行为！')}),
+  performCommand
+);
+performTrialUserCommand({type: 'join', target: 'foo'}); 
+//=> "禁止显示！重载限制行为！"
+performTrialUserCommand({type: 'notify', message: 'Hi new user'}); 
+//=> "Hi new user"
+```
+
+```javascript
+// Auto curry args
+_$.Fun.curry1 = function (fun); // 1 arg of fun
+_$.Fun.curry2 = function (fun); // 2 args of fun
+_$.Fun.curry3 = function (fun); // 3 args of fun
+
+["11", "11", "11", "11"].map(parseInt); 
+//=> [11, NaN, 3, 4]
+["11", "11", "11", "11"].map(_$.Fun.curry1(parseInt));
+//=> [11, 11, 11, 11]
+["11", "11", "11", "11"].map(_$.Fun.curry2(parseInt)(2));
+//=> [3, 3, 3, 3]
+
+var plays = [
+  {artist: "Burial", track: "Archangel"},
+  {artist: "Ben Frost", track: "Stomp"},
+  {artist: "Ben Frost", track: "Stomp"},
+  {artist: "Burial", track: "Archangel"},
+  {artist: "Emeralds", track: "Snores"},
+  {artist: "Burial", track: "Archangel"},  
+];
+function songToString (song) {
+  return [song.artist, song.track].join("-");
+};
+
+var songCount = _$.Fun.curry2(_.countBy)(songToString);
+songCount(plays);
+/*=>
+{"Ben Frost-Stomp":2
+ "Burial-Archangel":3
+ "Emeralds-Snores":1}
+*/
+
+var songsPlayed = _$.Fun.curry3(_.uniq)(false)(songToString);
+songsPlayed(plays);
+/*=>
+[
+  {artist: "Burial", track: "Archangel"},
+  {artist: "Ben Frost", track: "Stomp"},
+  {artist: "Emeralds", track: "Snores"}
+]
+*/
+
+var greaterThan = _$.Fun.curry2(function (lhs, rhs) { return lhs > rhs; });
+var lessThan = _$.Fun.curry2(function (lhs, rhs) { return lhs < rhs; });
+var withinRange = _$.Fun.checker(
+  _$.Fun.validator("arg must be greater than 10", greaterThan(10)),
+  _$.Fun.validator("arg must be less than 20", lessThan(20))
+);
+withinRange(15); //=> []
+withinRange(1); //=> ["arg must be greater than 10"]
+withinRange(100); //=> ["arg must be less than 20"]
+```
+
+```javascript
+_$.Fun.toHex = function (n); // Int to hex
+```
+
+```javascript
+_$.Fun.rgbToHexString = function (r, g, b); // RGB to hex string
+
+_$.Fun.rgbToHexString(255, 255, 255); //=> "#ffffff"
+
+var blueGreenish = _$.Fun.curry3(_$.Fun.rgbToHexString)(255)(200);
+blueGreenish(0); //=> "00c8ff"
+```
+
+```javascript
+// Partial application for certain args
+_$.Fun.partial1 = function (fun, arg1); // 1 arg of fun
+_$.Fun.partial2 = function (fun, arg1, arg2); // 2 args of fun
+_$.Fun.partial = function (fun /*, pargs*/); // any args of fun
+
+function div (n, d) { return n/d; };
+
+var over10Part1 = _$.Fun.partial1(div, 10);
+over10Part1(5); //=> 2
+
+var div10by2 = _$.Fun.partial2(div, 10, 2);
+div10by2(); //=> 5
+
+var over10Partial = _$.Fun.partial(div, 10);
+over10Partial(2); //=> 5
+
+var div10By2By4By5000Partial = _$.Fun.partial(div, 10, 2, 4, 5000);
+div10By2By4By5000Partial(); //=> 5
+```
+
+```javascript
+_$.Fun.condition1 = function (/* validators */); // Precondition with Fun.validator
+
+var zero = _$.Fun.validator("cannot be zero", function (n) { return 0 === n; });
+var number =  _$.Fun.validator("arg must be a number", _.isNumber);
+
+var sqrPre = _$.Fun.condition1(
+  _$.Fun.validator("arg must not be zero", _$.Fun.complement(zero)),
+  _$.Fun.validator("arg must be a number", _.isNumber)
+);
+function uncheckedSqr (n) { return n * n;};
+var checkedSqr = _$.Fun.partial1(sqrPre, uncheckedSqr);
+checkedSqr(10); //=> 10
+checkedSqr(""); //=> Error: "arg must be a number"
+checkedSqr(0); //=> Error: "arg must not be zero"
+
+var sillySquare = _$.Fun.partial1(
+  _$.Fun.condition1(_$.Fun.validator("should be even", _$.Fun.isEven)),
+  checkedSqr
+);
+sillySquare(10); //=> 100
+sillySquare(11); //=> Error: "should be even"
+sillySquare(""); //=> Error: "arg must be a number"
+sillySquare(0); //=> Error: "arg must not be zero"
+
+var sqrPost = _$.Fun.condition1(
+  _$.Fun.validator("result should be a number", _.isNumber),
+  _$.Fun.validator("result should not be zero", _$.Fun.complement(zero)),
+  _$.Fun.validator("result should be positive", greaterThan(0))
+);
+var megaCheckedSqr = _.compose(_$.Fun.partial(sqrPost, _.identity), checkedSqr);
+megaCheckedSqr(10); //=> 100
+megaCheckedSqr(0); //=> Error: "result should not be zero"
 ```
