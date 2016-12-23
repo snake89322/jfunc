@@ -142,6 +142,25 @@
 		}, false);
 	};
 
+	// Judge if array index
+	Fun.isIndexed = function (data) {
+		return _.isArray(data) || _.isString(data);
+	};
+
+	// Abstract array width index
+	Fun.nth = function (a, index) {
+		if (!_.isNumber(index)) fail("Expected a number as the index");
+		if (!Fun.isIndexed(a)) fail("Not supported on non-indexed type");
+		if (index < 0 || index > a.length - 1) fail("Index value is out of bounds");
+
+		return a[index];
+	};
+
+	// Second element of array
+	Fun.second = function (a) {
+		return Fun.nth(a, 1);
+	};
+
 	// Complementary set 
 	Fun.complement = function (pred) {
 		return function () {
@@ -443,6 +462,40 @@
 
 			return fun(arg);
 		};
+	};
+
+	// Array's length
+	Fun.myLength = function (ary) {
+		if (_.isEmpty(ary)) return 0;else return 1 + Fun.myLength(_.rest(ary));
+	};
+
+	// Cycle array to consume times
+	Fun.cycle = function (times, ary) {
+		if (times <= 0) return [];else return Fun.cat(ary, Fun.cycle(times - 1, ary));
+	};
+
+	// Step to zipped pair of array
+	Fun.constructPair = function (pair, rests) {
+		return [Fun.construct(_.first(pair), _.first(rests)), Fun.construct(Fun.second(pair), Fun.second(rests))];
+	};
+
+	// Unzip of reverse of _.zip
+	Fun.unzip = function (pairs) {
+		if (_.isEmpty(pairs)) return [[], []];
+
+		return Fun.constructPair(_.first(pairs), Fun.unzip(_.rest(pairs)));
+	};
+
+	// Comsume traversal of [pair arrays]
+	Fun.nexts = function (graph, node) {
+		if (_.isEmpty(graph)) return [];
+
+		var pair = _.first(graph);
+		var from = _.first(pair);
+		var to = Fun.second(pair);
+		var more = _.rest(graph);
+
+		if (_.isEqual(node, from)) return Fun.construct(to, Fun.nexts(more, node));else return Fun.nexts(more, node);
 	};
 
 	exports.Fun = Fun;

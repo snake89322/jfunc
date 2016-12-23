@@ -50,6 +50,25 @@ _$.Fun.anyOf(/* funs */); // All functions' return judge
 ```
 
 ```javascript
+_$.Fun.isIndexed(data); // Judge if array index
+```
+
+```javascript
+_$.Fun.nth(a, index); // Abstract array width index
+
+var letters = ['a', 'b', 'c'];
+_$.Fun.nth(letters, 1); //=> "b"
+_$.Fun.nth("abc", 0); //=> "a"
+_$.Fun.nth({}, 2); //=> "Not supported on non-indexed type"
+_$.Fun.nth(letters, 4000); //=> "Index value is out of bounds"
+_$.Fun.nth(letters, "aaa"); //=> "Expected a number as the index"
+```
+
+```javascript
+_$.Fun.second(a); // Second element of array
+```
+
+```javascript
 _$.Fun.complement(pred); // Complementary set 
 ```
 
@@ -412,3 +431,67 @@ var megaCheckedSqr = _.compose(_$.Fun.partial(sqrPost, _.identity), checkedSqr);
 megaCheckedSqr(10); //=> 100
 megaCheckedSqr(0); //=> Error: "result should not be zero"
 ```
+
+```javascript
+_$.Fun.myLength = function (ary); // Array's length
+
+var a = _.range(10);
+_$.Fun.myLength(a); //=> 10
+a; //=> [0,1,2,3,4,5,6,7,8,9]
+```
+
+```javascript
+_$.Fun.cycle = function (times, ary); // Cycle array to consume times
+
+_$.Fun.cycle(2, [1, 2, 3]);
+//=> [1,2,3,1,2,3]
+_.take(_$.Fun.cycle(20, [1, 2, 3]), 11);
+//=> [1,2,3,1,2,3,1,2,3,1,2]
+```
+
+```javascript
+_$.Fun.constructPair = function (pair, rests); // Step to zipped pair of array
+
+_$.Fun.constructPair(['a', 1], [[], []]);
+//=> [['a'], [1]]
+_.zip(['a'], [1]);
+//=> [[a, 1]]
+_.zip.apply(null, _$.Fun.constructPair(['a', 1], [[], []]));
+//=> [[a, 1]]
+_$.Fun.constructPair(
+  ['a', 1],
+  _$.Fun.constructPair(
+    ['b', 2],
+    _$.Fun.constructPair(
+      ['c', 3],
+      [[], []]
+    )
+  )
+);
+//=> [['a', 'b', 'c'], [1, 2, 3]]
+```
+
+```javascript
+_$.Fun.unzip = function (pairs); // Unzip of reverse of _.zip
+
+_$.Fun.unzip(_.zip([1, 2, 3], [4, 5, 6]));
+//=> [[1, 2, 3], [4, 5, 6]]
+```
+
+```javascript
+_$.Fun.nexts = function (graph, node); // Comsume traversal of [pair arrays]
+
+var influence = [
+  ['Lisp', 'Smalltalk'],
+  ['Lisp', 'Scheme'],
+  ['Smalltalk', 'Self'],
+  ['Scheme', 'JavaScript'],
+  ['Scheme', 'Lua'],
+  ['Self', 'JavaScript'],
+  ['Self', 'Lua'],
+];
+_$.Fun.nexts(influence, 'Lisp');
+//=> ['Smalltalk', 'Scheme']
+```
+
+
