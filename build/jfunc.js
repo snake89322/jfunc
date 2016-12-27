@@ -469,6 +469,13 @@
 		if (_.isEmpty(ary)) return 0;else return 1 + Fun.myLength(_.rest(ary));
 	};
 
+	// Tail comsume of array's length
+	Fun.tcLength = function (ary, n) {
+		var l = n ? n : 0;
+
+		if (_.isEmpty(ary)) return l;else return Fun.tcLength(_.rest(ary), l + 1);
+	};
+
 	// Cycle array to consume times
 	Fun.cycle = function (times, ary) {
 		if (times <= 0) return [];else return Fun.cat(ary, Fun.cycle(times - 1, ary));
@@ -496,6 +503,147 @@
 		var more = _.rest(graph);
 
 		if (_.isEqual(node, from)) return Fun.construct(to, Fun.nexts(more, node));else return Fun.nexts(more, node);
+	};
+
+	// Depth search and save node to seen
+	Fun.depthSearch = function (graph, nodes, seen) {
+		if (_.isEmpty(nodes)) return Fun.invoker('reverse', Array.prototype.reverse)(seen);
+
+		var node = _.first(nodes);
+		var more = _.rest(nodes);
+
+		if (_.contains(seen, node)) return Fun.depthSearch(graph, more, seen);else return Fun.depthSearch(graph, Fun.cat(Fun.nexts(graph, node), more), Fun.construct(node, seen));
+	};
+
+	// Fun.checker of comsume
+	Fun.andify = function () /* preds */{
+		var preds = _.toArray(arguments);
+
+		return function () /* args */{
+			var args = _.toArray(arguments);
+
+			var everything = function everything(ps, truth) {
+				if (_.isEmpty(ps)) return truth;else return _.every(args, _.first(ps)) && everything(_.rest(ps), truth);
+			};
+
+			return everything(preds, true);
+		};
+	};
+
+	// Fun.checker of comsume
+	Fun.orify = function () /* preds */{
+		var preds = _.toArray(arguments);
+
+		return function () /* args */{
+			var args = _.toArray(arguments);
+
+			var something = function something(ps, truth) {
+				if (_.isEmpty(ps)) return truth;else return _.some(args, _.first(ps)) || something(_.rest(ps), truth);
+			};
+
+			return something(preds, false);
+		};
+	};
+
+	// Each other comsume
+	Fun.evenSteven = function (n) {
+		if (0 === n) return true;else return Fun.oddJohn(Math.abs(n) - 1);
+	};
+	Fun.oddJohn = function (n) {
+		if (0 === n) return false;else return Fun.evenSteven(Math.abs(n) - 1);
+	};
+
+	// Flat number in arrays, more clever use _.flatten
+	Fun.flat = function (array) {
+		if (_.isArray(array)) return Fun.cat.apply(Fun.cat, _.map(array, Fun.flat));else return [array];
+	};
+
+	// Deep clone
+	Fun.deepClone = function (obj) {
+		if (!existy(obj) || !_.isObject(obj)) return obj;
+		var temp = new obj.constructor();
+		for (var key in obj) {
+			if (obj.hasOwnProperty(key)) temp[key] = Fun.deepClone(obj[key]);
+		}return temp;
+	};
+
+	// Further processing array 
+	Fun.visit = function (mapFun, resultFun, array) {
+		if (_.isArray(array)) return resultFun(_.map(array, mapFun));else return resultFun(array);
+	};
+
+	// Depth search after extend every nodes 
+	Fun.postDepth = function (fun, ary) {
+		return Fun.visit(Fun.partial1(Fun.postDepth, fun), fun, ary);
+	};
+
+	// Depth search before extend every nodes 
+	Fun.preDepth = function (fun, ary) {
+		return Fun.visit(Fun.partial1(Fun.preDepth), fun, fun(ary));
+	};
+
+	// Build influenced language array
+	Fun.influencedWithStrategy = function (strategy, lang, graph) {
+		var results = [];
+
+		strategy(function (x) {
+			if (_.isArray(x) && _.first(x) === lang) results.push(Fun.second(x));
+
+			return x;
+		}, graph);
+
+		return results;
+	};
+
+	// Each other comsume advanced
+	Fun.evenOline = function (n) {
+		if (0 === n) return true;else return Fun.partial1(Fun.oddOline, Math.abs(n) - 1);
+	};
+	Fun.oddOline = function (n) {
+		if (0 === n) return false;else return Fun.partial1(Fun.evenOline, Math.abs(n) - 1);
+	};
+
+	// Flat handle return of function until it not a function
+	Fun.trampoline = function (fun /* ,args */) {
+		var result = fun.apply(fun, _.rest(arguments));
+
+		while (_.isFunction(result)) {
+			result = result();
+		};
+
+		return result;
+	};
+
+	// Safe each other comsume advanced
+	Fun.isEvenSafe = function (n) {
+		if (0 === n) return true;else return Fun.trampoline(Fun.partial1(Fun.oddOline, Math.abs(n) - 1));
+	};
+	Fun.isOddSafe = function (n) {
+		if (0 === n) return false;else return Fun.trampoline(Fun.partial1(Fun.evenOline, Math.abs(n) - 1));
+	};
+
+	// Generator by comsume
+	Fun.generator = function (seed, current, step) {
+		return {
+			head: current(seed),
+			tail: function tail() {
+				console.log("forced");
+				return Fun.generator(step(seed), current, step);
+			}
+		};
+	};
+	Fun.genHead = function (gen) {
+		return gen.head;
+	};
+	Fun.genTail = function (gen) {
+		return gen.tail();
+	};
+	Fun.genTake = function (n, gen) {
+		var doTake = function doTake(x, g, ret) {
+			if (0 === x) return ret;else return Fun.partial(doTake, x - 1, Fun.genTail(g), Fun.cat(ret, Fun.genHead(g)));
+		};
+
+		return Fun.trampoline(doTake, n, gen, []);
 	};
 
 	exports.Fun = Fun;
