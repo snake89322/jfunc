@@ -17,10 +17,7 @@ var Fun = function (obj) {
 function existy (x) { return x != null; };
 // Internal function that returns truthy
 function truthy (x) { return (x !== false) && existy(x); };
-// Internal function that infomation tip
-function fail (thing) { throw new Error(thing); };
-function warn (thing) { console.log(["WARNING:", thing].join(' ')); };
-function note (thing) { console.log(["NOTE:", thing].join(' ')); };
+
 // Internal function that do action() judged by cond
 function doWhen (cond, action) {
 	if (truthy(cond))
@@ -28,6 +25,10 @@ function doWhen (cond, action) {
  	else
 	 	return undefined;
 };
+// Infomation tip
+Fun.fail = function (thing) { throw new Error(thing); };
+Fun.warn = function (thing) { console.log(["WARNING:", thing].join(' ')); };
+Fun.note = function (thing) { console.log(["NOTE:", thing].join(' ')); };
 
 // All functions' return judge like &&
 Fun.allOf = function (/* funs */) {
@@ -50,10 +51,10 @@ Fun.isIndexed = function (data) {
 
 // Abstract array width index
 Fun.nth = function (a, index) {
-	if (!_.isNumber(index)) fail("Expected a number as the index");
-	if (!Fun.isIndexed(a)) fail("Not supported on non-indexed type");
+	if (!_.isNumber(index)) Fun.fail("Expected a number as the index");
+	if (!Fun.isIndexed(a)) Fun.fail("Not supported on non-indexed type");
 	if ((index < 0) || (index > a.length - 1))
-		fail("Index value is out of bounds");
+		Fun.fail("Index value is out of bounds");
 	
 	return a[index];
 };
@@ -210,7 +211,7 @@ Fun.always = function (value) {
 // Receive a method，that apply to defined targets
 Fun.invoker = function (name, method) {
 	return function (target /* args */) {
-		if (!existy(target)) fail("Must provide a target");
+		if (!existy(target)) Fun.fail("Must provide a target");
 
 		var targetMethod = target[name];
 		var args = _.rest(arguments);
@@ -266,6 +267,16 @@ Fun.validator = function (message, fun) {
 	return f;
 };
 
+// Sqr
+Fun.sqr = function (n) {
+	var zero = Fun.validator('cannot be zero', function (n) { return 0 === n; });
+	var number = Fun.validator('arg must be a number', _.isNumber);
+	if (!number(n)) throw new Error(number.message);
+	if (zero(n)) throw new Error(zero.message);
+
+	return n * n;
+}
+
 // Validate object has keys
 Fun.hasKeys = function (/* keys */) {
 	var KEYS = _.toArray(arguments);
@@ -305,6 +316,12 @@ Fun.dispatch = function (/* funs */) {
 		return ret;
 	}
 };
+
+// To string
+Fun.str = Fun.dispatch(
+  Fun.invoker('toString', Array.prototype.toString),
+  Fun.invoker('toString', String.prototype.toString)
+);
 
 // Auto curry args
 Fun.curry1 = function (fun) {
@@ -522,6 +539,19 @@ Fun.deepClone = function (obj) {
 	return temp;
 };
 
+// Deep freeze
+Fun.deepFreeze = function (obj) {
+	if (!Object.isFrozen(obj))
+		Object.freeze(obj);
+	
+	for(var key in obj) {
+		if (!obj.hasOwnProperty(key) || !_.isObject(obj[key]))
+			continue;
+
+		Fun.deepFreeze(obj[key]);
+	}
+};
+
 // Further processing array 
 Fun.visit = function (mapFun, resultFun, array) {
 	if (_.isArray(array)) 
@@ -620,5 +650,136 @@ Fun.genTake = function (n, gen) {
 	return Fun.trampoline(doTake, n, gen, []);
 };
 
+// Rand num
+Fun.rand = Fun.partial1(_.random, 1);
+
+// Rand string
+Fun.randString = function (len) {
+	var ascii = Fun.repeatly(len, Fun.partial(Fun.rand, 26));
+
+	return _.map(ascii, function (n) {
+		return n.toString(36)
+	}).join('');
+}
+
+// Generate random charcater
+Fun.generateRandomCharacter = function () {
+  return Fun.rand(26).toString(36);
+};
+
+// Generate random charcater, effect same as Fun.randString 
+Fun.generateString = function (charGen, len) {
+  return Fun.repeatly(len, charGen).join('');
+};
+
+// Skip take elements of coll
+Fun.skipTake = function (n, coll) {
+	var ret = [];
+	var sz = _.size(coll);
+
+	for (var index = 0; index < sz; index += n) {
+		ret.push(coll[index]);
+	}
+
+	return ret;
+}
+
+// Sum in array
+Fun.summ = function (array) {
+	var result = 0;
+	var sz = array.length;
+
+	for (var i = 0; i < sz; i++) 
+		result += array[i];
+
+	return result;
+};
+Fun.summRec = function (array, seed) {
+	if (_.isEmpty(array))
+		return seed;
+	else 
+		return Fun.summRec(_.rest(array),_.first(array) + seed);
+};
+
+// Merge obj do not change origin obj
+Fun.merge = function (obj) {
+	return _.extend.apply(null, Fun.construct({}, arguments));
+};
+
+// Pipe line
+Fun.pipeline = function (seed, /* ,args */) {
+	return _.reduce(
+		_.rest(arguments),
+		function (l, r) { return r(l); },
+		seed
+	);
+}
+
+// Actions according pipline and lazyChain
+Fun.actions = function (acts, done) {
+	return function (seed) {
+		var init = { values: [], state: seed };
+
+		var intermediate = _.reduce(acts, function (stateObj, action) {
+			var result = action(stateObj.state);
+			var values = Fun.cat(stateObj.values, [result.state]);
+
+			return { values: values, state: result.state };
+		}, init);
+
+		var keep = _.filter(intermediate.values, existy);
+
+		return done(keep, intermediate.state);
+	};
+};
+
+// Brief create actions
+Fun.lift = function (answerFun, stateFun) {
+	return function (/* args */) {
+		var args = _.toArray(arguments);
+
+		return function (state) {
+			var ans = answerFun.apply(null, Fun.construct(state, args));
+			var s = stateFun ? stateFun(state) : ans;
+			console.log(stateFun)
+			return { answer: ans, state: s };
+		};
+	};
+};
+
+// lazyChain create by functional
+Fun.lazyChain = function (obj) {
+	var calls = [];
+
+	return {
+		invoke: function (methodName /* ,args */) {
+			var args = _.rest(arguments);
+			calls.push(function (target) {
+				var meth = target[methodName];
+				
+				return meth.apply(target, args);
+			});
+
+			return this;
+		},
+		force: function () {
+			return _.reduce(calls, function (ret, thunk) {
+				return thunk(ret);
+			}, obj);
+		}
+	}
+};
+
+// Classical to string
+Fun.polyToString = Fun.dispatch(
+	function (s) { return _.isString(s) ? s : undefined; },
+	function (s) { return _.isArray(s) ? Fun.stringifyArray(s) : undefined; },
+	function (s) { return _.isObject(s) ? JSON.stringify(s) : undefined; },
+	function (s) { return s.toString() }
+);
+Fun.stringifyArray = function (ary) {
+	return ["[", _.map(ary, Fun.polyToString).join(","), "]"].join('');
+};
+  
 export { Fun };
   

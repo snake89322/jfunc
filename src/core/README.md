@@ -1,6 +1,13 @@
 ## jfunc基础方法
 
 ```javascript
+// Infomation tip
+_$.Fun.fail(); 
+_$.Fun.warn(); 
+_$.Fun.note(); 
+```
+
+```javascript
 _$.Fun.allOf(/* funs */); // All functions' return judge
 ```
 
@@ -194,6 +201,14 @@ checkCommand(42); //=> ["must be a map"]
 ```
 
 ```javascript
+_$.Fun.sqr = function (n); // sqr
+
+_$.Fun.sqr(10); //=> 100
+_$.Fun.sqr(0); // Error: cannot be zero
+_$.Fun.sqr(''); // Error: arg must be a number
+```
+
+```javascript
 _$.Fun.hasKeys = function (/* keys */); // Validate object has keys
 
 function aMap (obj) { return _.isObject(obj); };
@@ -266,6 +281,11 @@ performTrialUserCommand({type: 'join', target: 'foo'});
 //=> "禁止显示！重载限制行为！"
 performTrialUserCommand({type: 'notify', message: 'Hi new user'}); 
 //=> "Hi new user"
+```
+
+```javascript
+// To string
+Fun.str(sth);
 ```
 
 ```javascript
@@ -526,6 +546,17 @@ z; //=> [{a: [1, 2, 3], b: 42}, {c: {d: []}}]
 ```
 
 ```javascript
+_$.Fun.deepFreeze = function (obj); // Deep freeze
+
+var x = [{a: [1, 2, 3], b: 42}, {c: {d: []}}];
+_$.Fun.deepFreeze(x);
+x[0] = null;
+x; //=> [{a: [1, 2, 3], b: 42}, {c: {d: []}}]
+x[1]['c']['d'] = 42;
+x; //=> [{a: [1, 2, 3], b: 42}, {c: {d: []}}]
+```
+
+```javascript
 _$.Fun.visit = function (mapFun, resultFun, array); // Further processing array 
 
 _$.Fun.visit(_.identity, _.isNumber, 42); //=> true
@@ -634,5 +665,605 @@ _$.Fun.genTake(10, ints);
 //=> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 ```
 
+```javascript
+_$.Fun.rand = function (n);  // Rand
+_$.Fun.randString = function (len); // Rand string
 
+_$.Fun.rand(10); //=> 7
+_$.Fun.repeatly(10, _$.Fun.partial1(_$.Fun.rand, 10));
+//=> [2, 6, 6, 7, 7, 4, 4, 10, 8, 5]
+_.take(_$.Fun.repeatly(10, _$.Fun.partial1(_$.Fun.rand, 10)), 5);
+//=> [9, 6, 6, 4, 6]
 
+_$.Fun.randString(0); //=> ""
+_$.Fun.randString(1); //=> "n"
+_$.Fun.randString(10); //=> "kd31cndokg"
+```
+
+```javascript
+// Generate random charcater
+_$.Fun.generateRandomCharacter = function ();  
+// Generate random charcater, effect same as Fun.randString 
+_$.Fun.generateString = function (charGen, len);
+
+_$.Fun.generateString(_$.Fun.generateRandomCharacter, 20);
+//=> "ln4eommlqbabmnqaaimk"
+
+var composedRandomString = _$.Fun.partial1(_$.Fun.generateString, _$.Fun.generateRandomCharacter);
+composedRandomString(10); //=> "3o1o3l155b"
+```
+
+```javascript
+// Skip take elements of coll
+_$.Fun.skipTake = function (n, coll);  
+
+_$.Fun.skipTake(2, [1, 2, 3, 4]); //=> [1, 3]
+_$.Fun.skipTake(2, _.range(20));
+//=> [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+```
+
+```javascript
+// Sum in array
+_$.Fun.summ = function (n, coll);  
+_$.Fun.summRec = function (n, coll);  
+
+_$.Fun.summ(_.range(1, 11)); //=> 55
+_$.Fun.summRec(_.range(1, 11), 0); //=> 55
+```
+
+```javascript
+// Merge obj do not change origin obj
+_$.Fun.merge = function (obj);  
+
+var person = {fname: 'Simon'};
+_.extend(person, {lname: 'Petrikov'}, {age: 28}, {age: 108});
+//=> {fname: "Simon", lname: "Petrikov", age: 108}
+person; //=> {fname: "Simon", lname: "Petrikov", age: 108}
+
+var person = {fname: 'Simon'};
+_$.Fun.merge(person, {lname: 'Petrikov'}, {age: 28}, {age: 108});
+//=> {fname: "Simon", lname: "Petrikov", age: 108}
+person; //=> {fname: 'Simon'}
+```
+
+```javascript
+// Pipe line
+_$.Fun.pipeline = function (seed, /* ,args */);  
+
+_$.Fun.pipeline(); //=> undefined
+_$.Fun.pipeline(42); //=> 42
+_$.Fun.pipeline(42, function (n) { return -n; }); //=> -42
+
+function fifth (a) {
+  return _$.Fun.pipeline (a
+    , _.rest
+    , _.rest
+    , _.rest
+    , _.rest
+    , _.first
+  );
+};
+fifth([1,2,3,4,5]); //=> 5
+
+function negativeFifth (a) {
+  return _$.Fun.pipeline (a
+    , fifth
+    , function (n) { return -n }
+  );
+};
+negativeFifth([1,2,3,4,5,6,7,8,9]); //=> -5
+
+var library = [
+  {title: "SICP", isbn: "0262010711", ed: 1},
+  {title: "SICP", isbn: "0262010811", ed: 2},
+  {title: "Joy of Clojure", isbn: "1935182461", ed: 1},
+]
+var RQL = {
+  select: _$.Fun.curry2(_$.Fun.project),
+  as: _$.Fun.curry2(_$.Fun.as),
+  where: _$.Fun.curry2(_$.Fun.restrict)
+};
+function allFirstEditions (table) {
+  return _$.Fun.pipeline(table
+    , RQL.as({ed: 'edition'})
+    , RQL.select(['title', 'edition', 'isbn'])
+    , RQL.where(function (book) { return book.edition === 1; })
+  )
+};
+allFirstEditions(library);
+```
+
+```javascript
+// Actions according pipeline and lazyChain
+_$.Fun.actions(acts, done);
+
+function mSqr () {
+  return function (state) {
+    var ans = _$.Fun.sqr(state);
+    return { answer: ans, state: ans };
+  };
+};
+var doubleSquareAction = _$.Fun.actions(
+  [ mSqr(), mSqr()],
+  function (values) { return values }
+);
+doubleSquareAction(10); //=> [100, 10000]
+
+function mNote () {
+  return function (state) {
+    _$.Fun.note(state);
+    return { answer: undefined, state: state };
+  };
+};
+function mNeg () {
+  return function (state) {
+    return { answer: -state, state: -state };
+  };
+};
+var negativeSqrAction = _$.Fun.actions(
+  [ mSqr(), mNote(), mNeg()],
+  function (_, state) { return state;}
+);
+negativeSqrAction(9);
+// NOTE: 81
+//=> -81
+```
+
+```javascript
+// Brief create actions
+_$.Fun.lift(answerFun, stateFun);
+
+var mSqr2 = _$.Fun.lift(_$.Fun.sqr);
+var mNote2 = _$.Fun.lift(_$.Fun.note, _.identity);
+var mNeg2 = _$.Fun.lift(function (n) { return -n; });
+var negativeSqrAction = _$.Fun.actions(
+  [ mSqr2(), mNote2(), mNeg2()],
+  function (_, state) { return state;}
+);
+negativeSqrAction(100);
+// NOTE: 10000
+//=> -10000
+
+var push = _$.Fun.lift(function (stack, e) { return _$.Fun.construct(e, stack)});
+var pop = _$.Fun.lift( _.first, _.rest );
+var stackAction = _$.Fun.actions(
+  [push(1), push(2), pop()],
+  function (values, state) { return values; }
+);
+stackAction([]);
+//=> [ [1], [2, 1], [1]]
+
+_$.Fun.pipeline(
+  []
+  , stackAction
+  , _.chain
+).each(function (elem) {
+  console.log(elem);
+});
+// (console) [1]
+// (console) [2, 1]
+// (console) [1]
+```
+
+```javascript
+// lazyChain create by functional
+_$.Fun.lazyChain(obj);
+
+var lazyOp = _$.Fun.lazyChain([2, 1, 3])
+  .invoke('concat', [7,7,8,9,0])
+  .invoke('sort');
+lazyOp.force(); //=> [0,1,2,3,5,6,7,7,8,9]
+
+function deferredSort (ary) {
+  return _$.Fun.lazyChain(ary).invoke('sort');
+};
+var deferredSorts = _.map([[2,1,3], [7,7,1], [0,9,5]], deferredSort);
+//=> [<thunk>, <thunk>, <thunk>]
+function force (thunk) {
+  return thunk.force();
+};
+_.map(deferredSorts, force);
+//=> [[1,2,3], [1,7,7], [0,5,9]]
+
+var validateTriples = _$.Fun.validator(
+  "Each array should have three elements",
+  function (arrays) {
+    return _.every(arrays, function (a) {
+      return a.length === 3;
+    });
+  }
+);
+var validateTripleStore = _$.Fun.partial1(_$.Fun.condition1(validateTriples), _.identity);
+validateTripleStore([[2,1,3], [7,7,1], [0,9,5]]);
+//=> [[2,1,3], [7,7,1], [0,9,5]]
+validateTripleStore([[2,1,3], [7,7,1], [0,9,5,7,7,7,7,7,7]]);
+// Uncaught Error: Each array should have three elements
+
+function postProcess (arrays) {
+  return _.map(arrays, _$.Fun.second);
+};
+function processTriples (data) {
+  return _$.Fun.pipeline(data
+    , JSON.parse
+    , validateTripleStore
+    , deferredSort
+    , force
+    , postProcess
+    , _$.Fun.invoker('sort', Array.prototype.sort)
+    , _$.Fun.str
+  )
+};
+processTriples("[[2,1,3], [7,7,1], [0,9,5]]");
+```
+
+```javascript
+// Classical to string
+_$.Fun.polyToString(s);
+_$.Fun.stringifyArray(ary)
+
+_$.Fun.polyToString(42); //=> "42"
+_$.Fun.polyToString([1,2,[3,4]]); //=> "[1,2,[3,4]]"
+_$.Fun.polyToString([1,2,{"a": 42, "b": [4,5,6]},77]); 
+//=> "[1,2,{"a": 42, "b": [4,5,6]},77]"
+_$.Fun.polyToString(new Date()); 
+//=> ""2016-12-30T06:00:35.466Z""
+```
+
+```javascript
+// Container class simple instantiation
+function Container (init) {
+  this._value = init;
+};
+
+Container.prototype = {
+  constructor: Container,
+
+  update: function (fun /*,args*/) {
+    var args = _.rest(arguments);
+    var oldValue = this._value;
+
+    this._value = fun.apply(this, _$.Fun.construct(oldValue, args));
+
+    return this._value;
+  },
+  toString: function () {
+    return ["@<", _$.Fun.polyToString(this._value), ">"].join('');
+  }
+};
+
+(new Container(42)).toString(); //=> "@<42>"
+
+var aNumber = new Container(42);
+aNumber.update(function (n) {return n + 1;}); //=> 43
+aNumber; //=> {_value: 43}
+aNumber.update(function (n, x, y, z) { return n/x/y/z}, 1, 2, 3);
+//=> 7.166666666666667
+
+aNumber.update(_.compose(megaCheckedSqr, _$.Fun.always(0)));
+// Error: arg must not be zero
+```
+
+```javascript
+// Lazy chain 
+function LazyChain (obj) {
+  this._calls = [];
+  this._target = obj;
+};
+
+LazyChain.prototype = {
+  constructor: LazyChain,
+  invoke: function (methodName/*, args*/) {
+    var args = _.rest(arguments);
+
+    this._calls.push(function (target) {
+      var meth = target[methodName];
+
+      return meth.apply(target, args);
+    });
+
+    return this;
+  },
+  force: function () {
+    return _.reduce(this._calls, function (target, thunk) {
+      return thunk(target);
+    }, this._target);
+  },
+  tap: function (fun) {
+    this._calls.push(function (target) {
+      fun(target);
+      return target;
+    });
+    return this;
+  }
+}
+
+new LazyChain([2, 1, 3]).invoke('sort')._calls;
+//=> [function(target) {...}]
+new LazyChain([2, 1, 3]).invoke('sort')._calls[0]();
+//=> Uncaught TypeError: Cannot read property 'sort' of undefined
+new LazyChain([2, 1, 3]).invoke('sort')._calls[0]([2, 1, 3]);
+//=> [1, 2, 3]
+
+new LazyChain([2, 1, 3]).invoke('sort').force();
+//=> [1, 2, 3]
+new LazyChain([2, 1, 3])
+  .invoke('concat', [8, 5, 7, 6])
+  .invoke('sort')
+  .invoke('join', '-')
+  .force();
+//=> "1-2-3-5-6-7-8"
+
+new LazyChain([2, 1, 3])
+  .invoke('sort')
+  .tap(alert)
+  .force();
+//=> alert box pops update
+//=> [1,2,3]
+
+var deferredSort = new LazyChain([2, 1, 3])
+  .invoke('sort')
+  .tap(alert);
+deferredSort; //=> LazyChain
+deferredSort.force();
+//=> alert box pops update
+//=> [1,2,3]
+
+function LazyChainChainChain (obj) {
+  var isLC = (obj instanceof LazyChain);
+
+  this._calls = isLC ? _$.Fun.cat(obj._calls, []) : [];
+  this._target = isLC ? obj._target : obj;
+}
+LazyChainChainChain.prototype = new LazyChain;
+
+new LazyChainChainChain(deferredSort)
+  .invoke('toString')
+  .force();
+//=> alert box pops update
+//=> "1,2,3"
+```
+
+```javascript
+// jQuery promise
+function go () {
+  var d = $.Deferred();
+
+  $.when("")
+   .then(function () {
+     setTimeout(function () { console.log("sub-task 1"); }, 1000);
+   })
+   .then(function () {
+     setTimeout(function () { console.log("sub-task 2"); }, 2000);
+   })
+   .then(function () {
+     setTimeout(function () { d.resolve("done done done done"); console.log(d.promise().state()) }, 3000);
+   });
+}
+```
+
+```javascript
+// Layer of class
+function ContainerClass () { Container.apply(this, _.toArray(arguments)) };
+function ObservedContainerClass () { ContainerClass.apply(this, _.toArray(arguments)); };
+function HoleClass () { ObservedContainerClass.apply(this, _.toArray(arguments)); };
+function CASClass () { HoleClass.apply(this, _.toArray(arguments)); };
+function TableBaseClass () { HoleClass.apply(this, _.toArray(arguments)); };
+
+ObservedContainerClass.prototype = new ContainerClass();
+HoleClass.prototype = new ObservedContainerClass();
+CASClass.prototype = new HoleClass();
+TableBaseClass.prototype = new HoleClass();
+
+(new CASClass()) instanceof HoleClass; //=> true
+(new TableBaseClass()) instanceof HoleClass; //=> true
+(new HoleClass()) instanceof CASClass; //=> false
+(new CASClass()) instanceof ContainerClass; //=> true
+
+ContainerClass.prototype = _.extend(Container.prototype, {
+  init: function (val) {
+    this._value = val;
+  },
+});
+var c = new ContainerClass(42);
+c; //=> Container {_value: 42}
+c instanceof Container //=> true
+
+ObservedContainerClass.prototype = _.extend(ContainerClass.prototype, {
+  observe: function (f) { _$.Fun.note("set observer") },
+  notify: function () { _$.Fun.note("notifying observers") }
+});
+
+HoleClass.prototype = _.extend(ObservedContainerClass.prototype, {
+  init: function (val) { this.setValue(val) },
+  setValue: function (val) {
+    this._value = val;
+    this.notify();
+    return val;
+  }
+});
+var h = new HoleClass(44);
+
+h.init(55);
+// NOTE: notifying observers
+h.observe(null)
+// NOTE: set observer
+h.setValue(108);
+// NOTE: notifying observers
+//=> 108
+
+CASClass.prototype = _.extend(HoleClass.prototype, {
+  swap: function (oldVal, newVal) {
+    if (!_.isEqual(oldVal, this._value)) _$.Fun.fail("No match");
+
+    return this.setValue(newVal);
+  }
+});
+var c = new CASClass(42);
+c.swap(42, 43);
+// NOTE: notifying observers
+//=> 43
+c.swap("not the value", 44);
+// Uncaught Error: No match
+```
+
+```javascript
+// Mixin functions to extend
+function Container (val) {
+  this._value = val;
+  this.init(val);
+};
+Container.prototype = {
+  constructor: Container,
+  init: _.identity,
+};
+
+var Hole = function (val) {
+  Container.call(this, val);
+};
+/*
+Hole.prototype = {
+  constructor: Hole,
+  validate: function (value) { _$.Fun.note("validate: " + value) },
+  notify: function () { _$.Fun.note("notifying observers") },
+}
+*/
+
+var HoleMixin = {
+  setValue: function (newValue) {
+    var oldVal = this._value;
+
+    this.validate(newValue);
+    this._value = newValue;
+    this.notify(oldVal, newValue);
+
+    return newValue;
+  }
+};
+
+var h = new Hole(42);
+// uncaught TypeError: this.init is not a function
+
+var ObserverMixin = (function () {
+  var _watchers = [];
+
+  return {
+    watch: function (fun) {
+      _watchers.push(fun);
+      return _.size(_watchers);
+    },
+    notify: function (oldVal, newVal) {
+      _.each(_watchers, function (watcher) {
+        watcher.call(this, oldVal, newVal);
+      });
+
+      return _.size(_watchers);
+    }
+  }
+})();
+
+var ValidateMixin = {
+  addValidator: function (fun) {
+    this._validator = fun;
+  },
+  init: function (val) {
+    this.validate(val);
+  },
+  validate: function (val) {
+    var existy = function (x) { return x != null; };
+    if ( existy(this._validator) && !this._validator(val) )
+      _$.Fun.fail("Attempted to set invalid value " + _$.Fun.polyToString);
+  }
+};
+
+_.extend(Hole.prototype
+  , HoleMixin
+  , ValidateMixin
+  , ObserverMixin
+);
+
+var h = new Hole(42);
+h.addValidator(_$.Fun.always(false));
+h.setValue(9);
+// Uncaught Error: Attempted to set invalid value undefined
+h.addValidator(_$.Fun.isEven);
+h.setValue(108); //=> 108
+h.setValue(9);
+// Uncaught Error: Attempted to set invalid value undefined
+h.watch(function (old, nu) {
+  _$.Fun.note(["changing", old, "to", nu].join(' '));
+}); 
+//=> 1
+h.setValue(42);
+// NOTE: changing 108 to 42
+//=> 42
+h.watch(function (old, nu) {
+  _$.Fun.note(["Veranderende", old, "tot", nu].join(' '));
+}); 
+//=> 2
+h.setValue(36);
+// NOTE: changing 42 to 36
+// NOTE: Veranderende 42 tot 36
+//=> 36
+
+var SwapMixin = {
+  swap: function (fun /* , args... */) {
+    var args = _.rest(arguments);
+    var newValue = fun.apply(this, _$.Fun.construct(this._value, args));
+
+    return this.setValue(newValue);
+  }
+};
+
+var o = {_value: 0, setValue: _.identity};
+_.extend(o, SwapMixin);
+o.swap(_$.Fun.construct, [1, 2, 3]);
+//=> [0, 1, 2, 3]
+
+var SnapshotMixin = {
+  snapshot: function () {
+    return _$.Fun.deepClone(this._value);
+  }
+};
+
+_.extend(Hole.prototype
+  , HoleMixin
+  , ValidateMixin
+  , ObserverMixin
+  , SwapMixin
+  , SnapshotMixin
+);
+
+var h = new Hole(42);
+h.snapshot(); //=> 42
+h.swap(_$.Fun.always(99)); //=> 99
+h.snapshot(); //=> 99
+
+var CAS = function (val) {
+  Hole.call(this, val);
+};
+var CASMixin = {
+  swap: function (oldVal, f) {
+    if (this._value === oldVal) {
+      this.setValue(f(this._value));
+      return this._value;
+    } else {
+      return undefined;
+    }
+  }
+};
+
+_.extend(CAS.prototype
+  , HoleMixin
+  , ValidateMixin
+  , ObserverMixin
+  , SwapMixin
+  , CASMixin
+  , SnapshotMixin
+);
+
+var c = new CAS(42);
+c.swap(42, _$.Fun.always(-1)); //=> -1
+c.snapshot(); //=> -1
+c.swap('not the value', _$.Fun.always(-1)); //=> undefined
+c.snapshot(); //=> -1
+```
