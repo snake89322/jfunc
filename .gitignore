@@ -51,3 +51,6 @@ node_modules
 
 # ignore ~ backup file
 *~
+
+# ignore qa-coverage-report
+qa/coverage

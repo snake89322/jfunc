@@ -1,6 +1,9 @@
-﻿module.exports = {
+﻿var webpack = require('webpack');
+module.exports = {
     // configuration
-    entry: "./build/build.js", //代表入口(总)文件，可以写多个
+    entry: { //代表入口(总)文件，可以写多个
+       jfunc: "./build/build.js", 
+    },
     output: {
         path: "./build/", //输出文件夹
         filename: "jfunc.js" //最终打包生成的文件名
@@ -13,11 +16,18 @@
                 query: {
                 	presets: ['es2015'],
                 	plugins: [
-                		"transform-es2015-modules-simple-commonjs"
+                		"transform-es2015-modules-simple-commonjs",
                 	],
                 }
             }
 
         ]
-    }
+    },
+    plugins: [
+        new webpack.optimize.UglifyJsPlugin({
+            compress: {
+                warnings: false
+            }
+        }),
+    ]
 };
