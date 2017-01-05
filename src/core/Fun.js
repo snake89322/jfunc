@@ -14,13 +14,13 @@ var Fun = function (obj) {
 };
 
 // Internal function that returns existy
-function existy (x) { return x != null; };
+Fun.existy = function (x) { return x != null; };
 // Internal function that returns truthy
-function truthy (x) { return (x !== false) && existy(x); };
+Fun.truthy = function (x) { return (x !== false) && Fun.existy(x); };
 
 // Internal function that do action() judged by cond
-function doWhen (cond, action) {
-	if (truthy(cond))
+Fun.doWhen = function (cond, action) {
+	if (Fun.truthy(cond))
 		return action();
  	else
 	 	return undefined;
@@ -82,7 +82,7 @@ Fun.isOdd = Fun.complement(Fun.isEven);
 // Concat 
 Fun.cat = function () {
 	var head = _.first(arguments);
-	if (existy(head))
+	if (Fun.existy(head))
 		return head.concat.apply(head, _.rest(arguments));
 	else
 		return [];
@@ -152,7 +152,7 @@ Fun.as = function (table, newNames) {
 // Conditions select and return a new table
 Fun.restrict = function (table, pred) {
 	return _.reduce(table, function (newTable, obj) {
-		if (truthy(pred(obj)))
+		if (Fun.truthy(pred(obj)))
 			return newTable;
 		else 
 			return _.without(newTable, obj);
@@ -211,12 +211,12 @@ Fun.always = function (value) {
 // Receive a method，that apply to defined targets
 Fun.invoker = function (name, method) {
 	return function (target /* args */) {
-		if (!existy(target)) Fun.fail("Must provide a target");
+		if (!Fun.existy(target)) Fun.fail("Must provide a target");
 
 		var targetMethod = target[name];
 		var args = _.rest(arguments);
 
-		return doWhen((existy(targetMethod) && method === targetMethod), function () {
+		return Fun.doWhen((Fun.existy(targetMethod) && method === targetMethod), function () {
 			return targetMethod.apply(target, args);
 		});
 	};
@@ -228,7 +228,7 @@ Fun.fnull = function (fun /*, defaults*/) {
 
 	return function (/* args */) {
 		var args = _.map(arguments, function (e, i) {
-			return existy(e) ? e : defaults[i];
+			return Fun.existy(e) ? e : defaults[i];
 		});
 
 		return fun.apply(null, args);
@@ -310,7 +310,7 @@ Fun.dispatch = function (/* funs */) {
 			var fun = funs[funIndex];
 			ret = fun.apply(fun, Fun.construct(target, args));
 
-			if (existy(ret)) return ret;
+			if (Fun.existy(ret)) return ret;
 		}
 
 		return ret;
@@ -529,7 +529,7 @@ Fun.flat = function (array) {
 
 // Deep clone
 Fun.deepClone = function (obj) {
-	if (!existy(obj) || !_.isObject(obj))
+	if (!Fun.existy(obj) || !_.isObject(obj))
 		return obj;
 	var temp = new obj.constructor();
 	for (var key in obj)
@@ -727,7 +727,7 @@ Fun.actions = function (acts, done) {
 			return { values: values, state: result.state };
 		}, init);
 
-		var keep = _.filter(intermediate.values, existy);
+		var keep = _.filter(intermediate.values, Fun.existy);
 
 		return done(keep, intermediate.state);
 	};
