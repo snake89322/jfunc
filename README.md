@@ -31,6 +31,12 @@ webpack
 2、jFunc全局变量root.jFunc 或者 root._$
 
 ### 3 功能
+*_$.Loader* - Class
+>Loader类,加载js(body结尾),css(head结尾),img
+>args可以是字符串,数组,json对象
+```javascript
+new Loader(step, callback, /* ,args*/);
+```
 
 *_$.UserAgent* - Object
 >列出所有UserAgent，判断匹配情况
